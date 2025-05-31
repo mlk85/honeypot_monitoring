@@ -1,4 +1,4 @@
-import csv
+import json
 import time
 import os
 import gspread
@@ -10,9 +10,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 load_dotenv()
 
-CONTRACT_ADDRESS = os.getenv('CONTACT_ADDRESS')
+CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
 INFURA_URL = os.getenv('INFURA_URL')
 SHEET_ID = os.getenv('SHEET_ID')
+GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
+
+creds_dict = json.loads(GOOGLE_CREDS_JSON)
+
 
 # ABI (skrót — tylko potrzebne eventy)
 ABI = [
@@ -45,7 +49,7 @@ contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
 
 #Google sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
