@@ -1,3 +1,4 @@
 .env
 honeypot_logs.csv
 .idea
+credentials.json
