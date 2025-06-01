@@ -86,10 +86,10 @@ while True:
                 ])
                 print(f"Caught: {log.args.attacker}")
             last_block = current_block
-        time.sleep(15)
+        time.sleep(60*10)
     except Exception as e:
         print(f"Error: ", e)
         web3 = Web3(Web3.HTTPProvider(INFURA_URL))
         contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
-        time.sleep(15)
+        time.sleep(60*10)
 

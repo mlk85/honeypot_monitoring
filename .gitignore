@@ -2,3 +2,5 @@
 honeypot_logs.csv
 .idea
 credentials.json
+tests.sol
+honeypot_lite.py
