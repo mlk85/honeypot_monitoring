@@ -23,22 +23,10 @@ ABI = [
     {
         "anonymous": False,
         "inputs": [
-            {"indexed": True, "internalType": "address", "name": "attacker", "type": "address"},
-            {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"},
-            {"indexed": False, "internalType": "uint256", "name": "attemptNum", "type": "uint256"},
-            {"indexed": False, "internalType": "bool", "name": "wasBlacklisted", "type": "bool"},
-            {"indexed": False, "internalType": "uint256", "name": "timestamp", "type": "uint256"}
+            {"indexed": True, "internalType": "address", "name": "from", "type": "address"},
+            {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"}
         ],
-        "name": "AttemptDetailed",
-        "type": "event"
-    },
-    {
-        "anonymous": False,
-        "inputs": [
-            {"indexed": True, "internalType": "address", "name": "attacker", "type": "address"},
-            {"indexed": False, "internalType": "uint256", "name": "timestamp", "type": "uint256"}
-        ],
-        "name": "Caught",
+        "name": "Bait",
         "type": "event"
     }
 ]
@@ -54,7 +42,7 @@ client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).sheet1
 
 if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
-    sheet.append_row(["type", "attacker", "value", "attemptNum", "wasBlacklisted", "timestamp"])
+    sheet.append_row(["attacker", "value", "timestamp"])
 
 
 print(f"Monitoring honeypot at: {CONTRACT_ADDRESS}")
@@ -66,30 +54,19 @@ while True:
     try:
         current_block = web3.eth.block_number
         if current_block > last_block:
-            logs = contract.events.AttemptDetailed.get_logs(from_block=last_block + 1, to_block=current_block)
+            logs = contract.events.Bait.get_logs(from_block=last_block + 1, to_block=current_block)
             for log in logs:
                 sheet.append_row([
-                    "AttemptDetailed",
-                    log.args.attacker,
-                    log.args.value,
-                    log.args.attemptNum,
-                    str(log.args.wasBlacklisted),
-                    log.args.timestamp
+                    log.args['from'],
+                    log.args['value'],
+                    log.blockNumber
                 ])
-                print(f"Attempt: {log.args.attacker} | {log.args.value} wei")
-            logs2 = contract.events.Caught.get_logs(from_block=last_block + 1, to_block=current_block)
-            for log in logs2:
-                sheet.append_row([
-                    "Caught",
-                    log.args.attacker,
-                    "", "", "", log.args.timestamp
-                ])
-                print(f"Caught: {log.args.attacker}")
+                print(f"Attempt: {log.args['from']} | {log.args['value']} wei")
             last_block = current_block
-        time.sleep(60*10)
+        time.sleep(60*30)
     except Exception as e:
         print(f"Error: ", e)
         web3 = Web3(Web3.HTTPProvider(INFURA_URL))
         contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
-        time.sleep(60*10)
-
+        time.sleep(60*30)
+        continue
